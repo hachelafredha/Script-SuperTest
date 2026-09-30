@@ -1,0 +1,100 @@
+#!/bin/bash
+
+############################################
+#         ADMIN TOOLKIT - PROFESSIONAL
+#         Author: Reda (Linux Admin)
+#         Description: System audit script
+############################################
+
+# === COLORS ===
+GREEN="\e[32m"
+RED="\e[31m"
+YELLOW="\e[33m"
+BLUE="\e[34m"
+RESET="\e[0m"
+
+# === LOG FILE ===
+LOGFILE="/var/log/admin_toolkit.log"
+
+# === HEADER ===
+echo -e "${BLUE}===== SYSTEM ADMINISTRATION REPORT =====${RESET}"
+echo "Generated on: $(date)"
+echo ""
+
+echo "===== SYSTEM ADMINISTRATION REPORT =====" >> $LOGFILE
+echo "Generated on: $(date)" >> $LOGFILE
+echo "" >> $LOGFILE
+
+############################################
+# FUNCTION 1: CHECK SERVICE STATUS
+############################################
+check_service() {
+    service=$1
+    echo -e "${YELLOW}[1] Checking service: $service${RESET}"
+
+    if systemctl is-active --quiet "$service"; then
+        echo -e "   ${GREEN}✔ $service is running${RESET}"
+        echo "✔ $service is running" >> $LOGFILE
+    else
+        echo -e "   ${RED}✘ $service is NOT running${RESET}"
+        echo "✘ $service is NOT running" >> $LOGFILE
+    fi
+
+    echo ""
+}
+
+############################################
+# FUNCTION 2: DISK USAGE MONITORING
+############################################
+check_disk() {
+    echo -e "${YELLOW}[2] Checking disk usage${RESET}"
+
+    usage=$(df / | grep / | awk '{print $5}' | sed 's/%//')
+
+    echo -e "   Current usage: ${BLUE}$usage%${RESET}"
+    echo "Disk usage: $usage%" >> $LOGFILE
+
+    if [ "$usage" -gt 80 ]; then
+        echo -e "   ${RED}⚠ ALERT: Disk usage exceeds 80%!${RESET}"
+        echo "⚠ ALERT: Disk usage exceeds 80%" >> $LOGFILE
+    else
+        echo -e "   ${GREEN}✔ Disk usage is safe${RESET}"
+        echo "✔ Disk usage is safe" >> $LOGFILE
+    fi
+
+    echo ""
+}
+
+############################################
+# FUNCTION 3: NETWORK SCAN
+############################################
+network_scan() {
+    echo -e "${YELLOW}[3] Network scan (online/offline systems)${RESET}"
+    network="192.168.1"
+
+    for i in {1..10}; do
+        ip="$network.$i"
+        ping -c 1 -W 1 $ip > /dev/null
+
+        if [ $? -eq 0 ]; then
+            echo -e "   ${GREEN}✔ $ip ONLINE${RESET}"
+            echo "$ip ONLINE" >> $LOGFILE
+        else
+            echo -e "   ${RED}✘ $ip OFFLINE${RESET}"
+            echo "$ip OFFLINE" >> $LOGFILE
+        fi
+    done
+
+    echo ""
+}
+
+############################################
+# EXECUTION
+############################################
+
+check_service "sshd"
+check_disk
+network_scan
+
+echo -e "${BLUE}===== END OF REPORT =====${RESET}"
+echo "===== END OF REPORT =====" >> $LOGFILE
